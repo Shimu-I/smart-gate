@@ -1,0 +1,221 @@
+//#include <Adafruit_NeoPixel.h>
+//#define RGB_PIN 48
+//#define NUM_PIXELS 1
+//Adafruit_NeoPixel pixels(NUM_PIXELS, RGB_PIN, NEO_GRB + NEO_KHZ800);
+//todo: later include rgb code for errors/successful operations
+#include <WiFi.h>
+#include <WebServer.h>
+#include <ArduinoJson.h>
+#include "mbedtls/md.h"
+#include <vector>
+
+// ---------------- WiFi Config ----------------
+const char* ap_ssid     = "ESP";
+const char* ap_password = "password";
+
+// ---------------- Secret Key -----------------
+#define SECRET_KEY "X7m!a9Pq$Lf2#Dz8&Vr4^Bblackbeard"   // CHANGE THIS (same on Gate)
+
+// ---------------- Globals --------------------
+WebServer server(80);
+
+struct Ticket {
+  String payload;
+  uint32_t exp;      // expiry time (seconds since boot)
+  bool used;
+};
+
+std::vector<Ticket> tickets;
+
+// ---------------- Utility: base64url + HMAC ----------------
+String base64url(const uint8_t* data, size_t len) {
+  String out;
+  static const char table[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_";
+  int val=0, valb=-6;
+  for (size_t i=0;i<len;i++) {
+    val = (val<<8) + data[i];
+    valb += 8;
+    while (valb >= 0) {
+      out += table[(val>>valb)&0x3F];
+      valb -= 6;
+    }
+  }
+  if (valb>-6) out += table[((val<<8)>>(valb+8))&0x3F];
+  return out;
+}
+
+bool hmac_sha256(const uint8_t* key, size_t keylen,
+                 const uint8_t* msg, size_t msglen,
+                 uint8_t out[32]) {
+  mbedtls_md_context_t ctx;
+  mbedtls_md_init(&ctx);
+  const mbedtls_md_info_t* info = mbedtls_md_info_from_type(MBEDTLS_MD_SHA256);
+  if (!info) return false;
+  mbedtls_md_setup(&ctx, info, 1);
+  mbedtls_md_hmac_starts(&ctx, key, keylen);
+  mbedtls_md_hmac_update(&ctx, msg, msglen);
+  mbedtls_md_hmac_finish(&ctx, out);
+  mbedtls_md_free(&ctx);
+  return true;
+}
+
+// ---------------- Ticket Management ----------------
+String issueTicket() {
+  uint32_t now = millis()/1000;
+  uint32_t exp = now + 600; // 10 minutes expiry
+
+  // 64-bit random nonce
+  uint64_t nonce=0;
+  for(int i=0;i<8;i++) nonce = (nonce<<8) | (uint8_t)esp_random();
+
+  // pack exp + nonce
+  uint8_t buf[12];
+  buf[0]=(exp>>24)&0xFF; buf[1]=(exp>>16)&0xFF; buf[2]=(exp>>8)&0xFF; buf[3]=exp;
+  for(int i=0;i<8;i++) buf[4+i] = (nonce>>(56-8*i))&0xFF;
+
+  String token = base64url(buf,12);
+
+  uint8_t mac[32];
+  hmac_sha256((const uint8_t*)SECRET_KEY, strlen(SECRET_KEY),
+              (const uint8_t*)token.c_str(), token.length(), mac);
+
+  String sig = base64url(mac,12); // truncated
+  String payload = token + "." + sig;
+
+  // Save in memory
+  Ticket t; t.payload=payload; t.exp=exp; t.used=false;
+  tickets.push_back(t);
+
+  return payload;
+}
+
+bool validateTicket(String payload) {
+  for (auto &t : tickets) {
+    if (t.payload == payload) {
+      if (t.used) return false;
+      uint32_t now = millis()/1000;
+      if (now > t.exp) return false;  // expired
+      t.used = true;                  // mark used
+      return true;
+    }
+  }
+  return false; // not found
+}
+
+void cleanupTickets() {
+  uint32_t now = millis()/1000;
+  for (int i = tickets.size()-1; i>=0; i--) {
+    // delete if already used OR expired more than 2 min ago
+    if (tickets[i].used || now > (tickets[i].exp + 120)) {
+      tickets.erase(tickets.begin()+i);
+    }
+  }
+}
+
+// ---------------- HTML Admin Page ----------------
+const char adminPage[] PROGMEM = R"rawliteral(
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Gate Admin</title>
+  <style>
+    body { font-family: Arial; text-align:center; margin-top:40px; }
+    button { font-size:20px; padding:10px 20px; }
+    #ticket { margin-top:20px; font-size:18px; word-break:break-all; }
+    table { margin:20px auto; border-collapse:collapse; width:80%; }
+    th, td { border:1px solid #999; padding:8px; text-align:center; }
+  </style>
+</head>
+<body>
+  <h2>Gate Admin Panel</h2>
+  <button onclick="issueTicket()">New Ticket</button>
+  <div id="ticket"></div>
+  <h3>Active Tickets</h3>
+  <table id="ticketTable">
+    <tr><th>Payload</th><th>Expires In (s)</th><th>Status</th></tr>
+  </table>
+  <script>
+    function issueTicket() {
+      fetch('/issue_ticket')
+        .then(res => res.json())
+        .then(data => {
+          document.getElementById('ticket').innerHTML =
+            "<b>New Ticket:</b><br>" + data.payload;
+          loadTickets();
+        });
+    }
+    function loadTickets() {
+      fetch('/tickets')
+        .then(res => res.json())
+        .then(data => {
+          let rows = "<tr><th>Payload</th><th>Expires In (s)</th><th>Status</th></tr>";
+          data.forEach(t => {
+            rows += "<tr><td>"+t.payload+"</td><td>"+t.expires+"</td><td>"+t.status+"</td></tr>";
+          });
+          document.getElementById('ticketTable').innerHTML = rows;
+        });
+    }
+    setInterval(loadTickets, 5000);
+    loadTickets();
+  </script>
+</body>
+</html>
+)rawliteral";
+
+// ---------------- HTTP Handlers ----------------
+void handleAdminPage() {
+  server.send_P(200, "text/html", adminPage);
+}
+
+void handleIssue() {
+  String p = issueTicket();
+  String json="{\"payload\":\""+p+"\"}";
+  server.send(200,"application/json",json);
+}
+
+void handleValidate() {
+  if (!server.hasArg("plain")) {server.send(400,"text/plain","no body");return;}
+  DynamicJsonDocument doc(256);
+  deserializeJson(doc,server.arg("plain"));
+  String payload=doc["payload"];
+  bool ok = validateTicket(payload);
+  server.send(200,"application/json",ok?"{\"ok\":true}":"{\"ok\":false}");
+}
+
+void handleTickets() {
+  DynamicJsonDocument doc(2048);
+  uint32_t now=millis()/1000;
+  for(auto &t : tickets){
+    JsonObject obj=doc.createNestedObject();
+    obj["payload"]=t.payload;
+    obj["expires"]=(t.exp>now)?(t.exp-now):0;
+    obj["status"]=t.used?"USED":((now>t.exp)?"EXPIRED":"ACTIVE");
+  }
+  String out; serializeJson(doc,out);
+  server.send(200,"application/json",out);
+}
+
+// ---------------- Setup ----------------
+unsigned long lastCleanup=0;
+
+void setup() {
+  Serial.begin(115200);
+  WiFi.mode(WIFI_AP);
+  WiFi.softAP(ap_ssid, ap_password);
+  Serial.println("AP started: " + String(ap_ssid));
+  Serial.println("Server IP: " + WiFi.softAPIP().toString());
+
+  server.on("/admin", HTTP_GET, handleAdminPage);
+  server.on("/issue_ticket", HTTP_GET, handleIssue);
+  server.on("/validate_ticket", HTTP_POST, handleValidate);
+  server.on("/tickets", HTTP_GET, handleTickets);
+  server.begin();
+}
+
+void loop() {
+  server.handleClient();
+  if (millis()-lastCleanup>60000) { // cleanup every 60s
+    cleanupTickets();
+    lastCleanup=millis();
+  }
+}
