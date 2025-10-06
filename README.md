@@ -107,6 +107,28 @@ In short, the system demonstrates how **low-cost microcontrollers** can be combi
 | PVC Board | 1 | Provides a stable structure for mounting hardware |
 
 ---
+## 🔧 Project Setup
+### Software Requirements
+
+- **IDE**: Arduino IDE (latest version recommended)
+- **Programming Language**: C++
+- **Libraries Used**:
+    1. **Adafruit NeoPixel** by Adafruit
+        - Controls single-wire-based LED pixels and strips like WS2812 NeoPixels.
+    2. **Adafruit PN532** by Adafruit
+        - Provides SPI and I2C access to the PN532 RFID/Near Field Communication chip.
+    3. **ArduinoJson** by Benoit Blanchon
+        - A simple and efficient JSON library for embedded C++ on Arduino.
+    4. **ESP32Servo** by Kevin Harrington, John K. Bennett
+        - Allows ESP32 boards to control servo, tone, and analogWrite motors using Arduino semantics.
+    5. **Adafruit BusIO** by Adafruit
+        - Abstracts away I2C, SPI, and UART interfacing for easier communication.
+    6. **Adafruit DMA neopixel** by Adafruit
+        - DMA-based library for driving NeoPixels on SAMD21/SAMD51 microcontrollers (e.g., Feather M0/M4) without interrupting other tasks.
+    7. **Adafruit NeoPixel** by Adafruit
+        - Same as above, for controlling LED pixels and strips.
+
+
 
 ## 🛠️ Project Updates
 
