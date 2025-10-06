@@ -1,9 +1,10 @@
 
 
 ## [project presentation link🚡](https://www.canva.com/design/DAGxvjW1ttA/XTJ3PxfRbfMikCMG0TYQAw/edit?utm_content=DAGxvjW1ttA&utm_campaign=designshare&utm_medium=link2&utm_source=sharebutton)
-## [project proposal](proposal.docx/)
+## [presentation file](SmartGate.pptx/)
+## [project proposal file](proposal.docx/)
+## [demonstration video]()
 
-# 
 
 # Smart Metro Gate Access System Using ESP32
 
