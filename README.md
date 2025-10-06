@@ -149,7 +149,7 @@ In short, the system demonstrates how **low-cost microcontrollers** can be combi
 - **IR Modules:** Send infrared light, detect reflection time, and calculate distance to determine passenger direction.
 - **Servo Motor:** Rotates 180° (90° each side) to open/close the gate when a passenger is detected.
 
-### **3rd Update: RFID Integration**
+### [**3rd Update: RFID Integration**](https://1drv.ms/w/c/5e3cf0811b9f8cbd/ERLqWH5QmqpIrGRKp7fHHzMB5O1_ouPatLD2OKqZjludjw?e=fklQkn)
 
 - Set up an **ESP32 with a PN532 RFID reader** using **I2C communication**.
 - The ESP32:
