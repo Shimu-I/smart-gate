@@ -5,10 +5,10 @@
 ![Visitor Count](https://visitor-badge.laobi.icu/badge?page_id=shimu-i/smart-gate)
 
 
-## [project presentation link🚡](https://www.canva.com/design/DAGxvjW1ttA/XTJ3PxfRbfMikCMG0TYQAw/edit?utm_content=DAGxvjW1ttA&utm_campaign=designshare&utm_medium=link2&utm_source=sharebutton)
-## [presentation file](SmartGate.pptx/)
-## [project proposal file](proposal.docx/)
-## [demonstration video]()
+## 🚡 [project presentation link](https://www.canva.com/design/DAGxvjW1ttA/XTJ3PxfRbfMikCMG0TYQAw/edit?utm_content=DAGxvjW1ttA&utm_campaign=designshare&utm_medium=link2&utm_source=sharebutton)
+## 🖥️ [presentation file](SmartGate.pptx/)
+## 📄 [project proposal file](proposal.docx/)
+## 🎥 [demonstration video]()
 
 
 # Smart Metro Gate Access System Using ESP32
@@ -19,14 +19,30 @@ During the July 2024 student revolution in Bangladesh, many metro station gates 
 
 ---
 
-## Project Overview
+## 🚀 Project Overview
 
-The current metro rail system in Dhaka depends on centralized servers, plastic smart cards, and mechanical gates. Once these fail, the system stops. To address this, we designed a **dual-access metro gate** powered by ESP32 microcontrollers.
+The **Smart Metro Gate Access System Using ESP32** is a **decentralized, dual-access metro entry system** that operates independently of internet or centralized servers. It is designed to ensure uninterrupted passenger flow during both normal operations and network outages.
 
-- **Passenger Access:** QR code or RFID card.
-- **Local Operation:** System runs on a local Wi-Fi network, independent of the internet or central server.
-- **Secure & Reliable:** Works during network failures, ensuring uninterrupted service.
+Unlike Dhaka Metro’s current setup — which relies heavily on centralized ticket servers and mechanical gates — this system uses **multiple ESP32 microcontrollers** to locally handle ticket generation, validation, and gate control within a **self-contained Wi-Fi network**.
 
+The system consists of three main units:
+
+1. **ESP32 Server Unit (Main Controller):**
+    - Acts as a local Wi-Fi Access Point and database server.
+    - Hosts a web-based ticket management interface where administrators can issue, view, and delete tickets.
+    - Generates unique, time-limited tickets secured with **HMAC-SHA256 encryption** and displays them as **QR codes** on a TFT screen.
+2. **Gate Control Unit (ESP32-S3):**
+    - Connects to the server via the local Wi-Fi network.
+    - Controls a **servo motor** that physically opens or closes the gate.
+    - Uses **two IR sensors** to detect passenger presence and direction, ensuring safe gate operation.
+3. **ESP32-CAM & PN532 Reader Unit:**
+    - **ESP32-CAM** scans QR code tickets presented by passengers.
+    - **PN532 RFID module** reads RFID cards for alternate access.
+    - Both modules communicate with the server to validate user credentials.
+
+All components communicate wirelessly within a **local network**, allowing the entire system to operate **offline**. Ticket validation, gate actuation, and expiration checks occur locally — ensuring robustness even when internet connectivity or central infrastructure fails.
+
+In short, the system demonstrates how **low-cost microcontrollers** can be combined to create a **resilient, intelligent, and secure metro gate solution** suitable for modern urban transportation.
 ### System Diagram
 
 ```
@@ -75,7 +91,7 @@ The current metro rail system in Dhaka depends on centralized servers, plastic s
 
 ---
 
-## Project Updates
+## 🛠️ Project Updates
 
 ### **1st Update: Ticket Generation**
 
@@ -124,12 +140,112 @@ The current metro rail system in Dhaka depends on centralized servers, plastic s
 
 ---
 
-## How It Works
+## ⚙️ How It Works
 
-1. Passenger presents **RFID card** or **QR code ticket**.
-2. **IR sensors** detect the passenger's presence.
-3. **ESP32 server** validates ticket locally.
-4. **Servo motor** opens the gate if the ticket is valid.
-5. Ticket expires after 10 minutes and is deleted to prevent reuse.
+The **Smart Metro Gate Access System** operates through a **local Wi-Fi network** managed by one ESP32 module acting as the **main server**. Other ESP32 devices (such as the gate controller and camera unit) connect to it to perform specific tasks. The system is designed to continue operating even when offline, making it reliable in emergencies or unstable network conditions.
 
+### 🔹 Step 1: Ticket Creation and Management
+
+- The **main ESP32 server** runs a local **Wi-Fi Access Point (AP)** and hosts a **web-based ticket management interface**.
+- Passengers or administrators can connect to the ESP32’s Wi-Fi and generate tickets through this web page.
+- Each ticket is:
+    - A **unique, randomly generated token** signed with **HMAC-SHA256** for security.
+    - Stored temporarily in the ESP32’s memory.
+    - Set to **expire after 10 minutes** to prevent misuse or sharing.
+- The server also displays the generated ticket as a **QR code** on a TFT display for easy scanning.
+
+### 🔹 Step 2: Passenger Detection
+
+- Two **IR sensors** are installed near the gate to detect passenger presence and direction of movement.
+- When a person approaches:
+    - The **first IR sensor** detects entry.
+    - The **second IR sensor** confirms movement through the gate.
+- This dual-sensor setup helps the system **differentiate between entry and exit** and prevents false triggering.
+
+### 🔹 Step 3: Ticket Verification
+
+- Passengers can authenticate using **either**:
+    - A **QR code**, scanned by the **ESP32-CAM**, or
+    - An **RFID card**, read by the **PN532 RFID module**.
+- Once scanned or tapped:
+    - The corresponding ESP32 sends the ticket data (token or UID) to the **main ESP32 server** over the local Wi-Fi network.
+    - The server checks whether the ticket or card is **valid, unused, and unexpired** in its local database.
+
+### 🔹 Step 4: Gate Control
+
+- If the validation is successful:
+    - The **main ESP32** sends a command to the **gate ESP32 module**, which controls a **servo motor**.
+    - The servo rotates **90° to open** the gate, allowing the passenger to pass.
+    - After the IR sensors confirm passage, the servo **returns to the closed position**.
+- Invalid or expired tickets trigger a **denial signal**, keeping the gate closed.
+
+### 🔹 Step 5: Data Handling and Cleanup
+
+- Each used ticket is immediately **marked as used** and **removed from memory**.
+- A background process automatically deletes **expired tickets** to free up space and maintain security.
+- The system requires no external storage or internet, keeping all validation **local and secure**.
+
+---
+
+## ✅ Advantages
+
+- **1. Offline Operation:**
+    
+    Works without internet or centralized servers, ensuring continuous functionality during outages or emergencies.
+    
+- **2. Low-Cost Implementation:**
+    
+    Uses affordable components like ESP32, PN532, and IR sensors — ideal for developing countries or small-scale transport systems.
+    
+- **3. Dual Access System:**
+    
+    Supports both QR codes and RFID cards, offering flexibility for users and redundancy in case one system fails.
+    
+- **4. Local Ticket Validation:**
+    
+    Reduces dependency on remote databases and prevents network delays or failures from affecting gate operation.
+    
+- **5. Security & Anti-Reuse:**
+    
+    Each ticket is encrypted with HMAC-SHA256, expires after 10 minutes, and is automatically deleted after use.
+    
+- **6. Scalability:**
+    
+    Can be easily expanded to support multiple gates within a local network or connected later to a central monitoring system.
+    
+- **7. Compact & Modular Design:**
+    
+    The hardware is lightweight and portable, making it easy to demonstrate, test, or integrate into existing gate systems.
+    
+
+---
+
+## ⚠️ Disadvantages
+
+- **1. Limited Range for RFID Reading:**
+    
+    PN532 modules have short detection distances, requiring cards to be placed close to the reader.
+    
+- **2. No Central Database Synchronization (Yet):**
+    
+    Since it’s locally operated, tickets or user data aren’t shared between gates unless manually configured.
+    
+- **3. Hardware Fragility:**
+    
+    Breadboard or PVC-based setups can be prone to connection issues or instability during transport or extended use.
+    
+- **4. Limited Processing Power:**
+    
+    ESP32 has restricted memory and CPU capacity, which may limit handling of high passenger volumes in large stations.
+    
+- **5. Manual Maintenance:**
+    
+    Requires occasional reboots or resets to clear memory and ensure stable long-term performance.
+    
+- **6. Limited Visual Feedback:**
+    
+    Small TFT displays may not provide enough visibility in bright outdoor conditions or for larger crowds.
+    
+
+---
 
