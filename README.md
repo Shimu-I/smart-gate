@@ -165,6 +165,8 @@ In short, the system demonstrates how **low-cost microcontrollers** can be combi
     - Two IR modules for entry/exit detection
     - PN532 RFID reader (short range — card must be close to read)
     - PVC board for structural support
+      
+[Received feedback — needs more modification.]()
 
 ### **Next (Final) Update**
 
