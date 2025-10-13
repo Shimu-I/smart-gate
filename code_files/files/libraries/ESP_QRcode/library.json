@@ -1,0 +1,29 @@
+{
+  "name": "ESP QRcode",
+  "version": "3.0.3",
+  "keywords": "ssd1306, oled, display, i2c, qr code, sh1106, st7735",
+  "description": "ESP Generate QRCode for SSD1306, SH1106 oled displays 128*64 pixel and others based on Adafruit ST7XX",
+  "repository":
+  {
+    "type": "git",
+    "url": "https://github.com/yoprogramo/ESP_QRcode"
+  },
+  "authors":
+  [
+    {
+        "name": "Jose Antonio Espinosa",
+        "email": "yoprogramo@gmail.com",
+        "url": "https://yoprogramo.com"
+    },
+    {
+        "name": "Anun Panya",
+        "email": "aspirinenun@gmail.com",
+        "url": "https://www.facebook.com/anun.panya"
+    }
+  ],
+  "frameworks": "arduino",
+  "platforms": [
+    "espressif8266",
+    "espressif32"
+  ]
+}
