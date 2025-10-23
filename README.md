@@ -4,6 +4,9 @@
 ![Made with Arduino](https://img.shields.io/badge/made%20with-Arduino-00979D?logo=arduino)
 ![Visitor Count](https://visitor-badge.laobi.icu/badge?page_id=shimu-i/smart-gate)
 
+![Uploading IMG20251020093343.jpg…]()
+
+
 
 ## 🚡 [project presentation link](https://www.canva.com/design/DAGxvjW1ttA/XTJ3PxfRbfMikCMG0TYQAw/edit?utm_content=DAGxvjW1ttA&utm_campaign=designshare&utm_medium=link2&utm_source=sharebutton)
 ## 🖥️ [presentation file](SmartGate.pptx/)
