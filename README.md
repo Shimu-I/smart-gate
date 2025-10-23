@@ -4,7 +4,8 @@
 ![Made with Arduino](https://img.shields.io/badge/made%20with-Arduino-00979D?logo=arduino)
 ![Visitor Count](https://visitor-badge.laobi.icu/badge?page_id=shimu-i/smart-gate)
 
-![Uploading IMG20251020093343.jpg…]()
+
+![alt text](project_view.jpg)
 
 
 
